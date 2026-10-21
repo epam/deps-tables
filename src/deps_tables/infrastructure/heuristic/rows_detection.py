@@ -34,7 +34,7 @@ class RowsIdentifier:
     def _identify_rows(self, img: np.ndarray, cells: List[CellTuple]) -> List[Row]:
         img_vector, text_boxes_filtered = img, cells
         kde = KernelDensity(kernel=self.KERNEL, bandwidth=self.BANDWIDTH)
-        rows = []
+        rows: List[Row] = []
 
         if len(text_boxes_filtered) < self.MIN_DATAPOINTS_COUNT:
             return rows
@@ -44,8 +44,7 @@ class RowsIdentifier:
         kde.fit(np.array([b[3] for b in text_boxes_filtered]).reshape(-1, 1))
         xs = np.linspace(t[1], t[3], self.N_SAMPLES)
         ys = 2 ** kde.score_samples(xs.reshape(-1, 1))
-        maxima = self._find_maxima(xs, ys)
-        maxima = [int(element) for element in maxima]
+        maxima = [int(element) for element in self._find_maxima(xs, ys)]
         if maxima:
             rows.extend(maxima)
         rows = [max(0, row) for row in rows]
@@ -57,7 +56,7 @@ class RowsIdentifier:
         if len(xs) != len(ys):
             raise Exception("Comparing arrays of different lengths.")  # noqa: WPS454
         return [
-            xs[i]
+            float(xs[i])
             for i in range(1, len(xs) - 1)
             if ys[i] > 1e-2 and ys[i - 1] <= ys[i] and ys[i + 1] <= ys[i]  # noqa: WPS221, WPS459
         ]

@@ -829,7 +829,7 @@ class TestAzureTableAdapter:
 
         tables = AzureTableAdapter.convert_to_domain_table(response=azure_response, source_id="source_id")
         assert len(tables[0].cells) == len(table_with_source_id.cells)
-        for (cell, expected_cell) in zip(tables[0].cells, table_with_source_id.cells):
+        for cell, expected_cell in zip(tables[0].cells, table_with_source_id.cells):
             assert near_equal(cell.source_bbox_coordinates[0], expected_cell.source_bbox_coordinates[0])
         assert all(
             near_equal(cell.source_bbox_coordinates[0], expected_cell.source_bbox_coordinates[0])

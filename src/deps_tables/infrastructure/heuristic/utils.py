@@ -2,7 +2,7 @@ import logging
 from collections import defaultdict as dd
 from itertools import combinations
 from operator import itemgetter
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List, Sequence, Tuple
 
 import numpy as np
 
@@ -29,7 +29,7 @@ def bounding_box_to_tuple(elements: List[BoundingBoxEntity]) -> List[CellTuple]:
         top = elem.left_top_point.y
         right = elem.right_bottom_point.x
         bottom = elem.right_bottom_point.y
-        box = tuple(max(c, 0) for c in (left, top, right, bottom))
+        box = (max(left, 0), max(top, 0), max(right, 0), max(bottom, 0))
         if right > left and bottom > top:
             format_boxes.append(box)
     return format_boxes
@@ -71,7 +71,7 @@ def merge_bboxes(bboxes: List[Bbox], merge_threshold: float) -> List[Bbox]:
     return [list(bbox) for bbox in updated_bboxes]
 
 
-def get_intersection_area(valid_bbox: List[int], predict_bbox: List[int]) -> int:
+def get_intersection_area(valid_bbox: Bbox, predict_bbox: Bbox) -> int:
     return calculate_bbox_area(
         [
             max(valid_bbox[0], predict_bbox[0]),
@@ -134,7 +134,7 @@ def get_intersected_box_index(cell: List, elements: List) -> List:
 
 
 def reformat_ocr_output(ocr: List[TextLineEntity]) -> List[OCROutput]:
-    output = []
+    output: List[OCROutput] = []
     for line in ocr:
         for word_box in line.word_boxes:
             left = word_box.bbox.left_top_point.x
@@ -158,7 +158,7 @@ def cell_to_content(
     table_left: int,
     threshold: float,
 ) -> Dict[tuple, Any]:
-    cells_to_content = dd(dict)
+    cells_to_content: Dict[tuple, Any] = dd(dict)
     for cell in cells:
         x1 = cell[0] + table_left
         y1 = cell[1] + table_top
@@ -245,7 +245,7 @@ def is_box_valid(box: Bbox) -> bool:
     return 0 <= box[0] < box[2] and 0 <= box[1] < box[3]
 
 
-def crop_boxes(boxes: List) -> Dict[Tuple, Any]:
+def crop_boxes(boxes: Sequence) -> Tuple[Dict[Tuple, Any], Dict[Tuple, Any]]:
     boxes_and_they_modifications_vertical = dd(list)
     boxes_and_they_modifications_horisontal = dd(list)
     for bbox1, bbox2 in combinations(boxes, 2):
@@ -267,9 +267,9 @@ def crop_boxes(boxes: List) -> Dict[Tuple, Any]:
     return boxes_and_they_modifications_vertical, boxes_and_they_modifications_horisontal
 
 
-def resize_cells(predicted_cells: List[Bbox]) -> List[CellTuple]:
-    predicted_cells = [tuple(box) for box in predicted_cells]
-    boxes_and_they_modifications_vertical, boxes_and_they_modifications_horisontal = crop_boxes(predicted_cells)
+def resize_cells(predicted_cells: Sequence[Sequence[int]]) -> List[CellTuple]:
+    normalized_cells = [tuple(box) for box in predicted_cells]
+    boxes_and_they_modifications_vertical, boxes_and_they_modifications_horisontal = crop_boxes(normalized_cells)
 
     updated_cells = []
     for orig_box, modifications in boxes_and_they_modifications_vertical.items():
@@ -283,14 +283,14 @@ def resize_cells(predicted_cells: List[Bbox]) -> List[CellTuple]:
         elif is_box_valid(orig_box):
             updated_cells.append(orig_box)
     new_cells = []
-    for c in predicted_cells:
+    for c in normalized_cells:
         if c not in list(boxes_and_they_modifications_vertical.keys()):
             new_cells.append((c[0], c[1], c[2], c[3]))
     updated_cells.extend(new_cells)
     return updated_cells
 
 
-def resize_ocr_cells(ocr_dict: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+def resize_ocr_cells(ocr_dict: Sequence[OCROutput]) -> List[Dict[str, Any]]:
     new_ocr_dict = []
     ocr_cells = {}
     for ocr_box in ocr_dict:
@@ -349,7 +349,7 @@ def resize_ocr_cells(ocr_dict: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
     return new_ocr_dict
 
 
-def create_table_from_lines(columns: List[Bbox], rows: List[Bbox]):
+def create_table_from_lines(columns: Sequence[Sequence[int]], rows: Sequence[Sequence[int]]):
     cells_list = {}
     columns_intervals = sorted(columns, key=lambda x: (x[0], x[1]))
     rows_intervals = sorted(rows, key=lambda x: x[0])
@@ -548,7 +548,7 @@ class LineDetector:
 def cell_tuple_replace(cell_to: CellTuple, cell_from: CellTuple, position_to: int, position_from: int) -> CellTuple:
     cell_to_list = list(cell_to)
     cell_to_list[position_to] = cell_from[position_from]
-    return tuple(cell_to_list)
+    return (cell_to_list[0], cell_to_list[1], cell_to_list[2], cell_to_list[3])
 
 
 def detect_lines_with_cv2(table_elements: TableElements, ocr, is_pdf_searchble):
@@ -668,7 +668,7 @@ class HeuristicColumnDetector:
     def _generate_new_borders(self, table: np.ndarray) -> List[List]:
         border_list = []
         for column in table:
-            new_borders = []
+            new_borders: List[Any] = []
             max_cells = max([len(cell) for cell in column if cell is not None], default=0)
             if max_cells == 1:
                 border_list.append(new_borders)

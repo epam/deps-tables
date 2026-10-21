@@ -1,4 +1,4 @@
-from typing import List, Tuple
+from typing import Any, Dict, List, Tuple
 
 import cv2
 import numpy as np
@@ -149,7 +149,12 @@ def adaptive_threshold(img: np.ndarray, process_background=False, blocksize=15, 
     return img, threshold
 
 
-def detect_lines_with_cv2(filtered_y_coords: List, table: Bbox, cells: List[Bbox], ocr: List[Bbox]) -> List[List[float]]:
+def detect_lines_with_cv2(
+    filtered_y_coords: List,
+    table: Bbox,
+    cells: List[Bbox],
+    ocr: List[Dict[str, Any]],
+) -> List[List[float]]:
     filtered_y_coords = sorted(filtered_y_coords)
     row_intervals = []
     min_hight = min([pred_cell[3] - pred_cell[1] for pred_cell in cells])

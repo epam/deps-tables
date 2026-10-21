@@ -19,7 +19,9 @@ def deps_auth_service_mock(mocker, application):
 @pytest.fixture
 def register_auth_for_app(fastapi_app, application):
     application.config.authentication.enabled.override(True)
-    register_auth(fastapi_app)
+    if not getattr(fastapi_app.state, "is_auth_registered", False):
+        register_auth(fastapi_app)
+        fastapi_app.state.is_auth_registered = True
     yield
 
     application.config.authentication.enabled.override(False)

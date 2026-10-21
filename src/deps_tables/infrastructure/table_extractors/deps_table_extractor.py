@@ -42,9 +42,9 @@ class DepsTablesExtractor(ITableExtractor):
     ) -> List[TableEntity]:
         _logger.info("Starting table extraction with DepsTablesExtractor")
         start = time.time()
-        ocr = self._ocr_service.extract_data(image_obj, ocr_engine, language)
-        ocr = util.reformat_ocr_output(ocr)
-        ocr = util.resize_ocr_cells(ocr)
+        extracted_ocr = self._ocr_service.extract_data(image_obj, ocr_engine, language)
+        reformatted_ocr = util.reformat_ocr_output(extracted_ocr)
+        ocr = util.resize_ocr_cells(reformatted_ocr)
         is_pdf_searchable = bool(image_obj.meta is not None and image_obj.meta.textlines)
         result = self._extract_structure(image_obj.blob_path, image_obj.image, ocr, is_pdf_searchable)
         if image_obj.meta and image_obj.meta.source_id:
@@ -98,19 +98,19 @@ class DepsTablesExtractor(ITableExtractor):
     def _model_output(self, name: str, image: np.ndarray, tables: List[BoundingBoxEntity]) -> Dict[str, Any]:
         data = {}
         cut_images = self._process_table_output(name, image, tables)
-        merged_tables = util.merge_overlapping_boxes(
+        merged_boxes = util.merge_overlapping_boxes(
             [cut_images[table]["table_box"] for table in cut_images.keys()],
             self.MERGE_TABLE_THRESHOLD,
         )
-        merged_tables = [BoundingBoxEntity.from_tuple((box, self.CONFIDENCE_THRESHOLD + 0.1)) for box in merged_tables]
+        merged_tables = [BoundingBoxEntity.from_tuple((box, self.CONFIDENCE_THRESHOLD + 0.1)) for box in merged_boxes]
         if len(merged_tables) < len(tables):
             cut_images = self._process_table_output(name, image, merged_tables)
 
         for key, img in cut_images.items():
             columns = self._column_identifier.identify_borders(img["cropped"])
             columns = [col for col in columns if col.confidence >= self.CONFIDENCE_THRESHOLD]
-            cells = self._cell_identifier.identify_borders(img["cropped"])
-            cells = util.bounding_box_to_tuple(cells)
+            identified_cells = self._cell_identifier.identify_borders(img["cropped"])
+            cells = util.bounding_box_to_tuple(identified_cells)
             cut_cells = util.resize_cells(cells)
 
             def sort_cell(cell):

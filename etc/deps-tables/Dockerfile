@@ -1,5 +1,5 @@
 ARG REPOSITORY_URL=""
-FROM ${REPOSITORY_URL:+$REPOSITORY_URL/base/}python:3.9.7-slim AS python-base
+FROM ${REPOSITORY_URL:+$REPOSITORY_URL/base/}python:3.12-slim AS python-base
 
 
 ENV LD_LIBRARY_PATH="$LD_LIBRARY_PATH:/usr/local/lib" \
@@ -21,7 +21,7 @@ RUN apt-get update \
         build-essential \
         # Install Poetry
         && pip install pip==23.2.1 \
-        && curl -sSL https://install.python-poetry.org | POETRY_HOME=$POETRY_PATH python3 - --version 1.6.1 \
+        && curl -sSL https://install.python-poetry.org | POETRY_HOME=$POETRY_PATH python3 - --version 1.8.3 \
         && poetry config virtualenvs.in-project true \
         # cleanup
         && rm -rf /var/lib/apt/lists/*

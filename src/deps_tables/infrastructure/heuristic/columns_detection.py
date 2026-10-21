@@ -36,7 +36,7 @@ class ColumnsCorrection:
         return list(map(srt, sorted_lines))
 
     def form_lines_from_columns(self, columns: Columns) -> List[Columns]:
-        lines = []
+        lines: List[Columns] = []
         for bbox1, bbox2 in combinations(columns, 2):
             if util.row_neighbor(bbox1, bbox2):
                 if not lines:
@@ -58,7 +58,7 @@ class ColumnsCorrection:
         contracted_columns = []
         if len(columns) < 2:
             return columns
-        buf = []
+        buf: List[int] = []
         for col_ind, column in enumerate(columns):
             if col_ind == len(columns) - 1:
                 if buf:

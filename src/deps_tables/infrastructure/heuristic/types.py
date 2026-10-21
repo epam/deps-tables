@@ -1,4 +1,4 @@
-from typing import Any, List, Optional, Tuple, TypedDict
+from typing import Any, List, Optional, Sequence, Tuple, TypedDict
 
 from numpy.typing import NDArray
 from pydantic import BaseModel
@@ -12,7 +12,7 @@ OCROutput = TypedDict(
     },
 )
 
-Bbox = List[int]
+Bbox = Sequence[int]
 Interval = Tuple[int, int]
 CellTuple = Tuple[int, int, int, int]
 

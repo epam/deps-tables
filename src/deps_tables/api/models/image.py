@@ -43,9 +43,9 @@ class ImageMetadataModel(BaseModel):
 
     def to_domain(self) -> ImageMetadataEntity:
         return ImageMetadataEntity(
-            textlines=[convert_textline_to_domain(textline) for textline in self.textlines]
-            if self.textlines is not None
-            else None,
+            textlines=(
+                [convert_textline_to_domain(textline) for textline in self.textlines] if self.textlines is not None else None
+            ),
         )
 
 
